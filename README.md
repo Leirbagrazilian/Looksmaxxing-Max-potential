@@ -26,23 +26,34 @@ Output in the `--out` folder: `report.md`, `landmarks.jpg` (annotated photo), `a
 
 **For best results:** use a straight-on photo with a level head and a neutral, closed-mouth expression, in even light, taken from 1.5 m or more (close selfies distort the nose and jaw).
 
-## Daily tracker app
+## Ascend: the daily app
 
-A local web app for daily check-ins:
+A dark, phone-first web app that runs on your own computer. Every day you scan your face, clear your quests and climb the ranks.
 
-```bash
-python -m looksmax.web                    # open http://127.0.0.1:8000
-python -m looksmax.web --host 0.0.0.0     # also reachable from your phone on the same Wi-Fi
-```
+**Start it (easiest):**
 
-- **Today:** upload (or take) today's photo. It is analysed on the spot: structure index, five component bars, photo-quality warnings and a full report.
-- **Daily checklist:** habits for today, tailored to the priority areas of your latest check-in (marked *for you*), with weekday rotation (training Mon/Wed/Fri, cardio Tue/Thu/Sat, grooming and a weekly review on Sunday). Each habit shows its evidence grade. Ticks save instantly.
-- **Focus for today:** one action per day, rotating through your priority areas, lesser-known habits and photo tips.
-- **Progress:** 4-week completion heatmap, streak (days at 70%+ of the checklist), per-habit completion rates, trend charts for every face score (daily dots plus a 7-check-in average) and a photo strip.
-- Use ‹ › to go back and fill in past days.
+| System | Do this |
+|---|---|
+| macOS / Linux | double-click or run `./start.sh` |
+| Windows | double-click `start.bat` |
 
-All data (photos and a SQLite database) stays on your machine in `~/.looksmax` (change it with `LOOKSMAX_HOME`).
-Take the photo in the same place, light and distance every day; otherwise day-to-day changes mostly reflect the photo, not your face.
+The first run sets everything up (needs Python 3.10-3.12 and internet once; takes a few minutes). After that it opens in your browser.
+To use it from your **phone**, run `./start.sh --phone` (or `start.bat --phone`) and open the address it prints on your phone, on the same Wi-Fi.
+
+Manual start: `pip install -r requirements.txt && python -m looksmax.web`.
+
+**Tabs:**
+
+- **Quests:** a progress ring and one direct coach line ("3 done, 9 to go. Next: protein target."). Quests are split into Morning / Day / Evening, and the current block opens by default. Quests tagged *for you* target the weak areas from your latest scan. Tap ⓘ for the why and the evidence grade. Every tick saves instantly and earns XP. One focus tip per day.
+- **Scan:** take or upload a photo (JPEG, PNG or iPhone HEIC; phone rotation is handled). You get a structure-index percentile, **your biggest lever** with a link to the quests that target it, the five component bars and photo-quality warnings. *Full breakdown* has priorities, actions, all measurements and habits, in collapsible sections.
+- **Progress:** streak, weekly completion and scan count, then three panes: a habit heatmap with per-habit rates, face trend charts, and a photo gallery.
+- **Profile:** rank and XP, plus reference-group settings.
+
+**Ranks** (Initiate, Apprentice, Adept, Vanguard, Ascendant, Paragon, Apex) measure **consistency, not looks**. XP per quest: strong-evidence habit 15, moderate 10, weak 5, scan 20.
+
+**Photos:** every photo is cropped and resized to the same framing as the reference faces before measuring, so a 12 MP phone photo is comparable with the reference set. For a meaningful trend, scan in the same place, light and distance daily, with your head level.
+
+All data (photos plus a SQLite database) stays on your computer in `~/.looksmax` (change it with `LOOKSMAX_HOME`).
 
 ## What the data says (summary)
 
@@ -61,8 +72,8 @@ From `docs/weight-validation.md` and the reference model:
 | `looksmax/` | the assessment tool (measurement, reference model, report, habits knowledge base) |
 | `looksmax/data/reference.npz` | derived statistics from SCUT-FBP5500 (no images) |
 | `looksmax/habits.py` | actions and habits with evidence and risk grades |
-| `looksmax/daily.py` | daily checklist and tip-of-the-day logic |
-| `looksmax/web/` | the daily tracker web app |
+| `looksmax/daily.py` | quests, XP/ranks, coach lines and tip of the day |
+| `looksmax/web/` | the Ascend web app |
 | `analysis/` | the weight-validation study |
 | `docs/weight-validation.md` | results of that study |
 

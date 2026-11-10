@@ -33,14 +33,14 @@ def main(argv=None):
     fm.close()
     if res is None:
         p.error("no face found; use a clear, front-facing photo")
-    metrics, shape, pts = res
+    metrics, shape, pts, crop = res
 
     eth = {"asian": "A", "caucasian": "C", None: None}[args.ethnicity]
     assessment = Reference().assess(metrics, shape, args.sex, eth)
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    annotate(img, pts, out / "landmarks.jpg")
+    annotate(crop, pts, out / "landmarks.jpg")
     (out / "report.md").write_text(render(assessment, args.sex, Path(args.photo).name, "landmarks.jpg"))
     (out / "assessment.json").write_text(json.dumps(assessment, indent=2, default=float))
     print(f"Report written to {out / 'report.md'}")

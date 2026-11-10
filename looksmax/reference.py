@@ -25,9 +25,13 @@ KEYS = ["M", "F", "AM", "CM", "AF", "CF"]   # sex, or ethnicity+sex
 CONFOUNDS = ["yaw", "pitch", "roll", "mouth_open", "log_sharp"]
 
 
-def confound_vector(m):
+def confound_vector(m, bounds=None):
     """Photo-condition covariates. Turning left or right distorts a face the
-    same way, so yaw and roll enter by magnitude; pitch has a curved effect."""
+    same way, so yaw and roll enter by magnitude; pitch has a curved effect.
+    With bounds, each raw confound is clamped to the reference range so the
+    correction never extrapolates far beyond the photos it was learned from."""
+    if bounds:
+        m = {k: (min(max(m[k], bounds[k][0]), bounds[k][1]) if k in bounds else m[k]) for k in m}
     return np.array([abs(m["yaw"]), m["yaw"] ** 2, m["pitch"], m["pitch"] ** 2,
                      abs(m["roll"]), m["mouth_open"], m["log_sharp"]])
 STRUCTURAL = ["fwhr", "cheek_jaw", "jaw_width_ratio", "canthal_tilt",
@@ -71,7 +75,7 @@ class Reference:
     def adjust(self, metrics, key):
         """Remove the effect of head pose / expression / sharpness."""
         m = self.meta["keys"][key]
-        c = confound_vector(metrics)
+        c = confound_vector(metrics, m.get("confound_bounds"))
         out = {}
         for col in STRUCTURAL:
             b = np.array(m["pose_coef"][col])
@@ -118,7 +122,7 @@ def build(img_dir, labels_csv, out_path=DEFAULT_PATH):
         res = fm.measure(cv2.imread(str(paths[r.file])))
         if res is None:
             continue
-        metrics, shape, _ = res
+        metrics, shape, _, _ = res
         rows.append({**metrics, "file": r.file, "rating": r.rating,
                      "sex": r.file[1], "eth": r.file[0]})
         shapes.append(shape)
@@ -187,6 +191,8 @@ def build(img_dir, labels_csv, out_path=DEFAULT_PATH):
         meta["keys"][key] = {
             "n": int(len(sub)),
             "confound_mean": C.mean(0).tolist(), "pose_coef": coef,
+            "confound_bounds": {k: [float(np.percentile(sub[k], 2)), float(np.percentile(sub[k], 98))]
+                                for k in CONFOUNDS},
             "mean": mean.to_dict(), "sd": sd.to_dict(),
             "overall_coef": dict(zip(COMPONENTS, lr.coef_.tolist())),
             "overall_intercept": float(lr.intercept_), "overall_cv_r2": float(cv_r2),

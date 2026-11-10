@@ -1,6 +1,76 @@
 {% extends "base.html" %}
-{% block title %}Report {{ day }} · Max Potential{% endblock %}
+{% block title %}Breakdown {{ day }} · Ascend{% endblock %}
 {% block body %}
-<p><a href="{{ url_for('today', d=day) }}">← Back to {{ day }}</a></p>
-<article class="card report">{{ html|safe }}</article>
+<p class="back"><a href="{{ url_for('scan', d=day.isoformat()) }}">‹ Scan</a></p>
+<h1>Breakdown <small class="sub">{{ day.strftime('%b %d') }}</small></h1>
+
+<section class="card result">
+  <img class="thumb" src="{{ url_for('photo', name=landmarks) }}" alt="Your landmarks">
+  <div>
+    <p class="eyebrow">Structure index</p>
+    <p class="big">{{ a.overall.pct|round|int }}<small>{{ (a.overall.pct|round|int)|ordinal }} pct</small></p>
+    <p class="sub">Explains only ~{{ ((a.overall.cv_r2 if a.overall.cv_r2 > 0 else 0) * 100)|round|int }}% of rating differences.
+      Hair, eyes, grooming and lighting matter too. A guide, not a verdict.</p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Where to focus</h2>
+  <ol class="prio">
+  {% for ar in areas %}<li><b>{{ ar.title }}</b><span class="chip {{ ar.changeable }}">{{ ar.changeable }} changeability</span></li>
+  {% else %}<li>No area is clearly below the reference. Keep up the habits.</li>{% endfor %}
+  </ol>
+</section>
+
+{% for ar in areas %}
+<details class="card acc" {{ 'open' if loop.first }}>
+  <summary><span>{{ ar.title }}</span></summary>
+  <p class="sub">{{ ar.why }}</p>
+  <ul class="actions">
+  {% for act, ev, risk, tf in ar.actions %}
+    <li><p>{{ act }}</p><p class="meta"><span class="ev">{{ ev }}</span> · risk {{ risk }} · {{ tf }}</p></li>
+  {% endfor %}
+  </ul>
+</details>
+{% endfor %}
+
+<details class="card acc">
+  <summary><span>All measurements</span><small>{{ measures|length }}</small></summary>
+  <p class="sub">Bold rows actually predicted ratings in the data (|r| ≥ 0.10). The rest are community metrics that barely mattered.</p>
+  <table class="mtable">
+    <thead><tr><th>Measure</th><th>You</th><th>Pct</th><th>r</th></tr></thead>
+    <tbody>
+    {% for m in measures %}
+      <tr class="{{ 'matters' if m.matters }}"><td>{{ m.label }}<small>{{ m.expl }} · typical {{ '%.2f'|format(m.lo) }}–{{ '%.2f'|format(m.hi) }}</small></td>
+        <td>{{ '%.2f'|format(m.value) }}</td><td>{{ m.pct|round|int }}</td><td>{{ '%+.2f'|format(m.r) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</details>
+
+<details class="card acc">
+  <summary><span>Presentation</span></summary>
+  <ul class="actions">{% for act, ev, risk in H.PRESENTATION %}<li><p>{{ act }}</p><p class="meta"><span class="ev">{{ ev }}</span></p></li>{% endfor %}</ul>
+</details>
+
+<details class="card acc">
+  <summary><span>Lesser-known habits</span></summary>
+  <ul class="actions">{% for name, ev, risk, note in H.LESSER_KNOWN %}<li><p><b>{{ name }}</b>. {{ note }}</p><p class="meta"><span class="ev">{{ ev }}</span> · risk {{ risk }}</p></li>{% endfor %}</ul>
+</details>
+
+<details class="card acc">
+  <summary><span>Overrated &amp; avoid</span></summary>
+  <ul class="actions">
+    {% for name, ev, risk, note in H.OVERRATED %}<li><p><b>{{ name }}</b>. {{ note }}</p><p class="meta"><span class="ev">{{ ev }}</span></p></li>{% endfor %}
+    {% for name, why in H.AVOID %}<li class="avoid"><p><b>{{ name }}</b>. {{ why }}</p></li>{% endfor %}
+  </ul>
+  <p class="sub">{{ H.SURGICAL_NOTE }}</p>
+</details>
+
+<details class="card acc">
+  <summary><span>How this works</span></summary>
+  <p class="sub">478 landmarks are measured on your photo and compared with the same measurements on {{ "{:,}".format(a.n_reference) }}
+    faces rated by 60 people each (SCUT-FBP5500). Head angle, expression and sharpness are removed statistically. A frontal photo can't
+    measure profile features (maxilla, chin projection), hair, height, body or style. Most raters were young Chinese adults.</p>
+</details>
 {% endblock %}

@@ -6,3 +6,4 @@
 features.csv
 __pycache__/
 looksmax_report/
+.venv/

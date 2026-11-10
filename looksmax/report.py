@@ -36,6 +36,12 @@ COMP_LABEL = {"leanness": "Facial leanness", "dimorphism": "Sex-typical features
 R_MIN = 0.10  # minimum |r| with ratings for a metric to drive advice
 
 
+def ordinal(n):
+    n = int(round(n))
+    suf = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suf}"
+
+
 def _bar(pct, width=20):
     filled = int(round(pct / 100 * width))
     return "█" * filled + "░" * (width - filled)
@@ -136,7 +142,7 @@ def render(a, sex, image_name=None, annotated_name=None):
     # ---- summary
     add("## Summary\n")
     o = a["overall"]
-    add(f"**Structure index:** {o['pct']:.0f}th percentile ({_band(o['pct'])}). "
+    add(f"**Structure index:** {ordinal(o['pct'])} percentile ({_band(o['pct'])}). "
         f"This combines the five components with weights learned from the ratings. "
         f"It explains only ~{max(o['cv_r2'], 0) * 100:.0f}% of rating differences on its own, because "
         f"hair, eyes, grooming, lighting and expression matter a lot and are not measured, so treat it "
@@ -191,7 +197,7 @@ def render(a, sex, image_name=None, annotated_name=None):
     if flags:
         add("**Measurements where you sit on the less-favourable side:**\n")
         for name, label, area, r, fpct in flags:
-            add(f"- {label}: you are at the {fpct:.0f}th percentile in the favourable direction "
+            add(f"- {label}: you are at the {ordinal(fpct)} percentile in the favourable direction "
                 f"(r = {r:+.2f}) → see *{H.AREA_ACTIONS[area]['title']}*")
         add("")
 

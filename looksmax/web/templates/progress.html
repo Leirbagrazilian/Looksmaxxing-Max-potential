@@ -1,47 +1,57 @@
 {% extends "base.html" %}
-{% block title %}Progress · Max Potential{% endblock %}
+{% block title %}Progress · Ascend{% endblock %}
 {% block body %}
 <h1>Progress</h1>
 
-<section class="card">
-  <div class="row"><h2>Habits, last 4 weeks</h2><span class="count">🔥 {{ streak }}-day streak</span></div>
-  <p class="muted">A day counts toward the streak at 70%+ of its checklist.</p>
-  <div class="heat" role="table" aria-label="Daily checklist completion">
-  {% for g in grid %}
-    <a href="{{ url_for('today', d=g.day.isoformat()) }}" class="cell" style="--p:{{ g.pct }}"
-       title="{{ g.day.strftime('%a %b %d') }}: {{ g.got }}/{{ g.total }}"><span>{{ g.day.day }}</span></a>
-  {% endfor %}
-  </div>
-  <table class="stats">
-    <thead><tr><th>Habit</th><th>Done</th><th></th></tr></thead>
-    <tbody>
-    {% for s in stats %}
-      <tr><td>{{ s.label }}</td><td>{{ s.got }}/{{ s.total }}</td>
-          <td class="bar"><b style="width:{{ (100 * s.pct)|round|int }}%"></b></td></tr>
+<section class="statrow">
+  <div class="card stat"><b class="gold">{{ streak }}</b><span>day streak</span></div>
+  <div class="card stat"><b>{{ (100 * week_pct)|round|int }}%</b><span>this week</span></div>
+  <div class="card stat"><b>{{ n_scans }}</b><span>scans</span></div>
+</section>
+{% if headline %}<p class="coach">{{ headline }}</p>{% endif %}
+
+<div class="seg" role="tablist">
+  <button role="tab" data-pane="habits" class="on">Habits</button>
+  <button role="tab" data-pane="face">Face</button>
+  <button role="tab" data-pane="photos">Photos</button>
+</div>
+
+<section class="pane" data-pane="habits">
+  <div class="card">
+    <p class="eyebrow">Last 4 weeks · streak counts days at 70%+</p>
+    <div class="heat">
+    {% for g in grid %}
+      <a href="{{ url_for('today', d=g.day.isoformat()) }}" class="cell" style="--p:{{ g.pct }}"
+         title="{{ g.day.strftime('%a %b %d') }}: {{ g.got }}/{{ g.total }}"><span>{{ g.day.day }}</span></a>
     {% endfor %}
-    </tbody>
-  </table>
+    </div>
+  </div>
+  <details class="card acc">
+    <summary><span>Per habit</span><small>weakest first</small></summary>
+    <table class="stats">
+    {% for s in stats %}
+      <tr><td>{{ s.label }}</td><td>{{ s.got }}/{{ s.total }}</td><td class="bar"><b style="width:{{ (100 * s.pct)|round|int }}%"></b></td></tr>
+    {% endfor %}
+    </table>
+  </details>
 </section>
 
-<section class="card">
-  <h2>Face trends</h2>
-  <p class="muted">Percentile vs. 2,750 rated faces. Dots are single days; the line is the 7-check-in average. Day-to-day
-    jumps are mostly lighting and pose, so watch the line, not the dots.</p>
+<section class="pane" data-pane="face" hidden>
+  <p class="sub">Dots are single scans; the line is the 7-scan average. Watch the line, not the dots.</p>
   <div class="charts">
   {% for c in charts %}
-    <figure><figcaption>{{ c.label }}{% if c.last is not none %} <b>{{ c.last|round|int }}</b>{% endif %}</figcaption>{{ c.svg|safe }}</figure>
+    <figure class="card"><figcaption>{{ c.label }}{% if c.last is not none %} <b>{{ c.last|round|int }}</b>{% endif %}</figcaption>{{ c.svg|safe }}</figure>
   {% endfor %}
   </div>
 </section>
 
-{% if photos %}
-<section class="card">
-  <h2>Recent photos</h2>
-  <div class="strip">
-  {% for c in photos %}
-    <a href="{{ url_for('today', d=c.day) }}"><img src="{{ url_for('photo', name=c.photo) }}" alt="{{ c.day }}"><span>{{ c.day[5:] }}</span></a>
+<section class="pane" data-pane="photos" hidden>
+  {% if photos %}
+  <div class="gallery">
+  {% for c in photos|reverse %}
+    <a href="{{ url_for('scan', d=c.day) }}"><img src="{{ url_for('photo', name=c.photo) }}" alt="{{ c.day }}" loading="lazy"><span>{{ c.day[5:] }}</span></a>
   {% endfor %}
   </div>
+  {% else %}<p class="sub">No scans yet.</p>{% endif %}
 </section>
-{% endif %}
 {% endblock %}

@@ -1,8 +1,9 @@
-<form class="upload" method="post" action="{{ url_for('checkin') }}" enctype="multipart/form-data">
+<form class="upload" method="post" action="{{ url_for('scan_upload') }}" enctype="multipart/form-data">
   <input type="hidden" name="day" value="{{ day.isoformat() }}">
   <label class="file">
-    <input type="file" name="photo" accept="image/*" capture="user" required>
-    <span>Choose or take photo</span>
+    <input type="file" name="photo" accept="image/*" required>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+    <span>Take or choose a photo</span>
   </label>
   <button class="btn" type="submit">Analyse</button>
 </form>

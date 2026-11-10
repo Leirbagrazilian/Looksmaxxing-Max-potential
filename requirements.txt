@@ -4,4 +4,5 @@ numpy
 pandas
 scikit-learn
 flask>=3
-markdown
+pillow
+pillow-heif

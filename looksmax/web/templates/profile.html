@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Profile · Ascend{% endblock %}
+{% block body %}
+{% if setup %}
+<h1>Welcome to Ascend</h1>
+<p class="lead">Scan your face daily, clear your quests, climb the ranks. Two quick choices to start.</p>
+{% else %}
+<h1>Profile</h1>
+<section class="card rankcard">
+  <div class="badge">{{ rank.tier }}</div>
+  <div>
+    <p class="eyebrow">Rank</p>
+    <h2>{{ rank.name }}</h2>
+    <div class="xpbar"><b style="width:{{ (100 * rank.progress)|round|int }}%"></b></div>
+    <p class="sub">{{ rank.xp }} XP{% if rank.next_name %} · {{ rank.next_at - rank.xp }} to {{ rank.next_name }}{% endif %}</p>
+  </div>
+</section>
+<p class="sub">Ranks measure consistency, not looks. Every quest you clear earns XP: strong-evidence habits 15, moderate 10, weak 5, scans 20.</p>
+<details class="card acc"><summary><span>All ranks</span></summary>
+  <ol class="ranks">{% for floor, name in ranks %}<li class="{{ 'here' if name == rank.name }}"><b>{{ name }}</b><span>{{ floor }} XP</span></li>{% endfor %}</ol>
+</details>
+{% endif %}
+
+<form class="card form" method="post">
+  <fieldset>
+    <legend>Compare my scans with</legend>
+    <div class="radios">
+      <label><input type="radio" name="sex" value="M" {{ 'checked' if s.sex == 'M' }} required><span>Men</span></label>
+      <label><input type="radio" name="sex" value="F" {{ 'checked' if s.sex == 'F' }}><span>Women</span></label>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>Reference subgroup</legend>
+    <div class="radios">
+      <label><input type="radio" name="ethnicity" value="" {{ 'checked' if not s.ethnicity }}><span>Everyone</span></label>
+      <label><input type="radio" name="ethnicity" value="asian" {{ 'checked' if s.ethnicity == 'asian' }}><span>Asian</span></label>
+      <label><input type="radio" name="ethnicity" value="caucasian" {{ 'checked' if s.ethnicity == 'caucasian' }}><span>Caucasian</span></label>
+    </div>
+  </fieldset>
+  <button class="btn" type="submit">{{ 'Start' if setup else 'Save' }}</button>
+  <p class="sub">Photos and data stay on this computer.</p>
+</form>
+{% endblock %}

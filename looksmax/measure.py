@@ -63,12 +63,38 @@ class FaceMeasurer:
         self._det.close()
 
     def measure(self, img_bgr):
-        """Returns (metrics dict, eye-normalised 468x2 shape, pixel landmarks) or None."""
-        pts, pose = self.detect(img_bgr)
+        """Returns (metrics, eye-normalised 468x2 shape, landmarks in the crop, crop) or None.
+
+        Every photo is first cropped and resized to the framing of the reference
+        images (350x350, face ~63% of the height). Skin texture and sharpness
+        depend on resolution, so this keeps a 12 MP phone photo comparable
+        with the reference set."""
+        pts, _ = self.detect(img_bgr)
+        if pts is None:
+            return None
+        crop = standard_crop(img_bgr, pts)
+        pts, pose = self.detect(crop)
         if pts is None:
             return None
         n = normalise(pts)
-        return compute_metrics(img_bgr, pts, n, pose), n[:468], pts
+        return compute_metrics(crop, pts, n, pose), n[:468], pts, crop
+
+
+REF_SIZE, REF_FACE_H, REF_CY = 350, 0.634, 0.56   # framing of the SCUT-FBP5500 images
+
+
+def standard_crop(img, pts):
+    """Square crop around the face, resized to the reference framing."""
+    x0, y0 = pts.min(0)
+    x1, y1 = pts.max(0)
+    side = (y1 - y0) / REF_FACE_H
+    cx = (x0 + x1) / 2
+    top = (y0 + y1) / 2 - REF_CY * side
+    src = np.float32([[cx - side / 2, top], [cx + side / 2, top], [cx - side / 2, top + side]])
+    dst = np.float32([[0, 0], [REF_SIZE, 0], [0, REF_SIZE]])
+    M = cv2.getAffineTransform(src, dst)
+    interp = cv2.INTER_AREA if side > REF_SIZE else cv2.INTER_LINEAR
+    return cv2.warpAffine(img, M, (REF_SIZE, REF_SIZE), flags=interp, borderMode=cv2.BORDER_REPLICATE)
 
 
 def head_pose(m):

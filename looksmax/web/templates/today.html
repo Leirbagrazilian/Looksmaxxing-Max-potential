@@ -2,64 +2,56 @@
 {% block body %}
 <div class="daynav">
   <a href="{{ url_for('today', d=prev) }}" aria-label="Previous day">‹</a>
-  <h1>{{ 'Today' if is_today else day.strftime('%a %b %d') }}<small>{{ day.strftime('%A, %B %d') if is_today }}</small></h1>
+  <div><h1>{{ 'Today' if is_today else day.strftime('%a, %b %d') }}</h1>
+    <p class="sub">{{ day.strftime('%A, %B %d') if is_today else 'Filling in a past day' }}</p></div>
   {% if next %}<a href="{{ url_for('today', d=next) }}" aria-label="Next day">›</a>{% else %}<span></span>{% endif %}
 </div>
 
-<section class="card">
-  <h2>Check-in photo</h2>
-  {% if checkin %}
-    <div class="checkin">
-      <a href="{{ url_for('photo', name=checkin.photo) }}"><img src="{{ url_for('photo', name=checkin.photo) }}" alt="Check-in photo"></a>
-      <div>
-        {% if checkin.assessment %}
-          {% set a = checkin.assessment %}
-          <div class="hero"><span>{{ a.overall.pct|round|int }}</span><small>structure index<br>percentile</small></div>
-          <ul class="bars">
-          {% for k, v in a.components.items() %}
-            <li><span>{{ comp_label[k] }}</span><b style="--p:{{ v.pct|round|int }}%"></b><em>{{ v.pct|round|int }}</em></li>
-          {% endfor %}
-          </ul>
-          <a class="btn ghost" href="{{ url_for('report', day=day.isoformat()) }}">Full report →</a>
-        {% endif %}
-      </div>
-    </div>
-    {% for w in checkin.warnings %}<p class="warn">⚠️ {{ w }}</p>{% endfor %}
-    <details><summary>Replace photo</summary>{% include "_upload.html" %}</details>
-  {% else %}
-    <p class="muted">Same spot, same light, phone at 1.5 m, head level, neutral face. Consistency makes the trend meaningful.</p>
-    {% include "_upload.html" %}
-  {% endif %}
+<section class="hero card">
+  <div class="ring" style="--p:{{ (100 * n_done / plan|length)|round|int if plan else 0 }}" id="ring">
+    <svg viewBox="0 0 36 36"><circle class="track" cx="18" cy="18" r="15.9"/><circle class="fill" cx="18" cy="18" r="15.9" pathLength="100"/></svg>
+    <div><b id="count">{{ n_done }}</b><span>/ {{ plan|length }}</span></div>
+  </div>
+  <div class="hero-text">
+    <p class="coach" id="coach">{{ coach }}</p>
+    <p class="xp"><span class="gold" id="xp-today">+{{ xp_today }}</span> / {{ xp_possible }} XP today</p>
+    {% if is_today and 'photo' not in done %}<a class="btn sm" href="{{ url_for('scan') }}">Scan now</a>{% endif %}
+  </div>
 </section>
 
-<section class="card">
-  <div class="row"><h2>Today's checklist</h2><span class="count" id="count">{{ n_done }}/{{ plan|length }}</span></div>
-  <div class="progress"><b id="pbar" style="width:{{ (100 * n_done / plan|length)|round|int if plan else 0 }}%"></b></div>
-  {% if priorities %}
-    <p class="muted">Tailored to your priorities from the {{ priority_source }} check-in: <strong>{{ priorities|join(', ') }}</strong>.</p>
-  {% else %}
-    <p class="muted">Upload a photo to tailor the checklist to your priority areas.</p>
-  {% endif %}
-  <ul class="checklist" data-day="{{ day.isoformat() }}">
-  {% for h in plan %}
-    <li>
+{% if focus_areas %}
+<p class="focusline">Tuned for: {% for f in focus_areas %}<span class="chip">{{ f }}</span>{% endfor %}</p>
+{% endif %}
+
+<section class="card quests" data-day="{{ day.isoformat() }}">
+  <div class="seg" role="tablist">
+    {% for key, label, items in groups %}
+      {% set g_done = items|selectattr('id', 'in', done)|list|length %}
+      <button role="tab" data-slot="{{ key }}" class="{{ 'on' if key == default_slot }}" {{ 'disabled' if not items }}>
+        {{ label }} <small data-count="{{ key }}">{{ g_done }}/{{ items|length }}</small></button>
+    {% endfor %}
+  </div>
+  {% for key, label, items in groups %}
+  <ul class="checklist" data-slot="{{ key }}" {{ 'hidden' if key != default_slot }}>
+    {% for h in items %}
+    <li class="{{ 'done' if h.id in done }}">
       <label>
-        <input type="checkbox" data-habit="{{ h.id }}" {{ 'checked' if h.id in done }} {{ 'disabled' if h.id == 'photo' }}>
-        <span class="lbl">{{ h.label }}
-          {% if h.targeted %}<i class="tag">for you</i>{% endif %}
-          {% if h.note %}<small>{{ h.note }}</small>{% endif %}
-        </span>
-        {% if h.evidence != '-' %}<span class="ev ev-{{ h.evidence }}" title="Evidence: {{ h.evidence }}">{{ h.evidence }}</span>{% endif %}
+        <input type="checkbox" data-habit="{{ h.id }}" data-xp="{{ h.xp }}" {{ 'checked' if h.id in done }} {{ 'disabled' if h.id == 'photo' }}>
+        <span class="lbl">{{ h.label }}{% if h.targeted %} <i class="tag">for you</i>{% endif %}</span>
+        <span class="xp-pill">+{{ h.xp }}</span>
       </label>
+      {% if h.note %}<details><summary aria-label="Why"></summary><p>{{ h.note }}{% if h.evidence != '-' %} <span class="ev">Evidence: {{ h.evidence }}</span>{% endif %}</p></details>{% endif %}
     </li>
-  {% endfor %}
+    {% else %}
+    <li class="empty">Nothing in this block today.</li>
+    {% endfor %}
   </ul>
+  {% endfor %}
 </section>
 
-<section class="card tip">
-  <h2>Focus for today</h2>
-  <p class="eyebrow">{{ tip.title }}</p>
+<details class="card tip">
+  <summary><span class="eyebrow">Today's focus · {{ tip.title }}</span><span class="tip-short">{{ tip.text.split('. ')[0].split(': ')[0] }}</span></summary>
   <p>{{ tip.text }}</p>
-  <p class="muted">Evidence: <span class="ev ev-{{ tip.evidence }}">{{ tip.evidence }}</span> · Risk: {{ tip.risk }}</p>
-</section>
+  <p class="meta">Evidence: {{ tip.evidence }} · Risk: {{ tip.risk }}</p>
+</details>
 {% endblock %}

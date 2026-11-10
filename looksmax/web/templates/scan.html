@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Scan · Ascend{% endblock %}
+{% block body %}
+<h1>Scan{% if not is_today %} <small class="sub">{{ day.strftime('%b %d') }}</small>{% endif %}</h1>
+
+{% if error %}<p class="warn">{{ error }}</p>{% endif %}
+
+{% if s %}
+  {% set a = s.a %}
+  <section class="card result">
+    <img class="thumb" src="{{ url_for('photo', name=checkin.photo) }}" alt="Your scan">
+    <div>
+      <p class="eyebrow">Structure index</p>
+      <p class="big">{{ a.overall.pct|round|int }}<small>{{ (a.overall.pct|round|int)|ordinal }} pct</small></p>
+      <p class="sub">vs {{ "{:,}".format(a.n_reference) }} rated faces</p>
+    </div>
+  </section>
+
+  {% if s.top %}
+  <section class="card callout">
+    <p class="eyebrow">Your biggest lever</p>
+    <h2>{{ s.top }}</h2>
+    <p>{{ s.top_why }}</p>
+    <a class="btn sm" href="{{ url_for('today', d=day.isoformat()) }}">{{ s.n_targeted }} quests target this →</a>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <ul class="bars">
+    {% for k, v in a.components.items() %}
+      <li><span>{{ comp_label[k] }}</span><b style="--p:{{ v.pct|round|int }}%"></b><em>{{ v.pct|round|int }}</em></li>
+    {% endfor %}
+    </ul>
+    {% for w in checkin.warnings %}<p class="warn">{{ w }}</p>{% endfor %}
+    <a class="btn ghost" href="{{ url_for('report', day=day.isoformat()) }}">Full breakdown →</a>
+  </section>
+
+  <details class="card"><summary>Retake scan</summary>{% include "_upload.html" %}</details>
+
+{% elif checkin %}
+  <section class="card">
+    {% for w in checkin.warnings %}<p class="warn">{{ w }}</p>{% endfor %}
+    {% include "_upload.html" %}
+  </section>
+
+{% else %}
+  <section class="card">
+    <p class="lead">One photo a day. Same setup every time, so changes reflect you, not the camera.</p>
+    <ul class="howto">
+      <li><b>1.5 m</b><span>Phone at arm's length or more. Close selfies inflate the nose.</span></li>
+      <li><b>Level</b><span>Look straight into the lens, head level, neutral face.</span></li>
+      <li><b>Light</b><span>Face a window. No overhead light or flash.</span></li>
+    </ul>
+    {% include "_upload.html" %}
+  </section>
+{% endif %}
+{% endblock %}
