@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="daynav">
+  <a href="{{ url_for('today', d=prev) }}" aria-label="Previous day">‹</a>
+  <h1>{{ 'Today' if is_today else day.strftime('%a %b %d') }}<small>{{ day.strftime('%A, %B %d') if is_today }}</small></h1>
+  {% if next %}<a href="{{ url_for('today', d=next) }}" aria-label="Next day">›</a>{% else %}<span></span>{% endif %}
+</div>
+
+<section class="card">
+  <h2>Check-in photo</h2>
+  {% if checkin %}
+    <div class="checkin">
+      <a href="{{ url_for('photo', name=checkin.photo) }}"><img src="{{ url_for('photo', name=checkin.photo) }}" alt="Check-in photo"></a>
+      <div>
+        {% if checkin.assessment %}
+          {% set a = checkin.assessment %}
+          <div class="hero"><span>{{ a.overall.pct|round|int }}</span><small>structure index<br>percentile</small></div>
+          <ul class="bars">
+          {% for k, v in a.components.items() %}
+            <li><span>{{ comp_label[k] }}</span><b style="--p:{{ v.pct|round|int }}%"></b><em>{{ v.pct|round|int }}</em></li>
+          {% endfor %}
+          </ul>
+          <a class="btn ghost" href="{{ url_for('report', day=day.isoformat()) }}">Full report →</a>
+        {% endif %}
+      </div>
+    </div>
+    {% for w in checkin.warnings %}<p class="warn">⚠️ {{ w }}</p>{% endfor %}
+    <details><summary>Replace photo</summary>{% include "_upload.html" %}</details>
+  {% else %}
+    <p class="muted">Same spot, same light, phone at 1.5 m, head level, neutral face. Consistency makes the trend meaningful.</p>
+    {% include "_upload.html" %}
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="row"><h2>Today's checklist</h2><span class="count" id="count">{{ n_done }}/{{ plan|length }}</span></div>
+  <div class="progress"><b id="pbar" style="width:{{ (100 * n_done / plan|length)|round|int if plan else 0 }}%"></b></div>
+  {% if priorities %}
+    <p class="muted">Tailored to your priorities from the {{ priority_source }} check-in: <strong>{{ priorities|join(', ') }}</strong>.</p>
+  {% else %}
+    <p class="muted">Upload a photo to tailor the checklist to your priority areas.</p>
+  {% endif %}
+  <ul class="checklist" data-day="{{ day.isoformat() }}">
+  {% for h in plan %}
+    <li>
+      <label>
+        <input type="checkbox" data-habit="{{ h.id }}" {{ 'checked' if h.id in done }} {{ 'disabled' if h.id == 'photo' }}>
+        <span class="lbl">{{ h.label }}
+          {% if h.targeted %}<i class="tag">for you</i>{% endif %}
+          {% if h.note %}<small>{{ h.note }}</small>{% endif %}
+        </span>
+        {% if h.evidence != '-' %}<span class="ev ev-{{ h.evidence }}" title="Evidence: {{ h.evidence }}">{{ h.evidence }}</span>{% endif %}
+      </label>
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+
+<section class="card tip">
+  <h2>Focus for today</h2>
+  <p class="eyebrow">{{ tip.title }}</p>
+  <p>{{ tip.text }}</p>
+  <p class="muted">Evidence: <span class="ev ev-{{ tip.evidence }}">{{ tip.evidence }}</span> · Risk: {{ tip.risk }}</p>
+</section>
+{% endblock %}

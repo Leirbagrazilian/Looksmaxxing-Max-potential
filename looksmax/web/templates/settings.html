@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Settings · Max Potential{% endblock %}
+{% block body %}
+<h1>Settings</h1>
+<form class="card form" method="post">
+  <p class="muted">Your photos are compared with rated faces of the same sex (and optionally ethnicity).
+    Everything stays on this computer.</p>
+  <fieldset>
+    <legend>Compare with</legend>
+    <label><input type="radio" name="sex" value="M" {{ 'checked' if s.sex == 'M' }} required> Men</label>
+    <label><input type="radio" name="sex" value="F" {{ 'checked' if s.sex == 'F' }}> Women</label>
+  </fieldset>
+  <fieldset>
+    <legend>Reference subgroup (optional)</legend>
+    <label><input type="radio" name="ethnicity" value="" {{ 'checked' if not s.ethnicity }}> Everyone</label>
+    <label><input type="radio" name="ethnicity" value="asian" {{ 'checked' if s.ethnicity == 'asian' }}> Asian</label>
+    <label><input type="radio" name="ethnicity" value="caucasian" {{ 'checked' if s.ethnicity == 'caucasian' }}> Caucasian</label>
+  </fieldset>
+  <button class="btn" type="submit">Save</button>
+</form>
+{% endblock %}

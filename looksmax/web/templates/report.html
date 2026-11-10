@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Report {{ day }} · Max Potential{% endblock %}
+{% block body %}
+<p><a href="{{ url_for('today', d=day) }}">← Back to {{ day }}</a></p>
+<article class="card report">{{ html|safe }}</article>
+{% endblock %}

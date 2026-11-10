@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Progress · Max Potential{% endblock %}
+{% block body %}
+<h1>Progress</h1>
+
+<section class="card">
+  <div class="row"><h2>Habits, last 4 weeks</h2><span class="count">🔥 {{ streak }}-day streak</span></div>
+  <p class="muted">A day counts toward the streak at 70%+ of its checklist.</p>
+  <div class="heat" role="table" aria-label="Daily checklist completion">
+  {% for g in grid %}
+    <a href="{{ url_for('today', d=g.day.isoformat()) }}" class="cell" style="--p:{{ g.pct }}"
+       title="{{ g.day.strftime('%a %b %d') }}: {{ g.got }}/{{ g.total }}"><span>{{ g.day.day }}</span></a>
+  {% endfor %}
+  </div>
+  <table class="stats">
+    <thead><tr><th>Habit</th><th>Done</th><th></th></tr></thead>
+    <tbody>
+    {% for s in stats %}
+      <tr><td>{{ s.label }}</td><td>{{ s.got }}/{{ s.total }}</td>
+          <td class="bar"><b style="width:{{ (100 * s.pct)|round|int }}%"></b></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h2>Face trends</h2>
+  <p class="muted">Percentile vs. 2,750 rated faces. Dots are single days; the line is the 7-check-in average. Day-to-day
+    jumps are mostly lighting and pose, so watch the line, not the dots.</p>
+  <div class="charts">
+  {% for c in charts %}
+    <figure><figcaption>{{ c.label }}{% if c.last is not none %} <b>{{ c.last|round|int }}</b>{% endif %}</figcaption>{{ c.svg|safe }}</figure>
+  {% endfor %}
+  </div>
+</section>
+
+{% if photos %}
+<section class="card">
+  <h2>Recent photos</h2>
+  <div class="strip">
+  {% for c in photos %}
+    <a href="{{ url_for('today', d=c.day) }}"><img src="{{ url_for('photo', name=c.photo) }}" alt="{{ c.day }}"><span>{{ c.day[5:] }}</span></a>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

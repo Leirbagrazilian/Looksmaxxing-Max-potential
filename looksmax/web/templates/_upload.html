@@ -1,0 +1,8 @@
+<form class="upload" method="post" action="{{ url_for('checkin') }}" enctype="multipart/form-data">
+  <input type="hidden" name="day" value="{{ day.isoformat() }}">
+  <label class="file">
+    <input type="file" name="photo" accept="image/*" capture="user" required>
+    <span>Choose or take photo</span>
+  </label>
+  <button class="btn" type="submit">Analyse</button>
+</form>
