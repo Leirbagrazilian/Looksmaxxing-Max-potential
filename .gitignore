@@ -1,0 +1,7 @@
+# dataset images, landmarks and model files are not redistributed
+*.jpg
+*.png
+*.npy
+*.task
+features.csv
+__pycache__/
