@@ -55,6 +55,23 @@ Manual start: `pip install -r requirements.txt && python -m looksmax.web`.
 
 All data (photos plus a SQLite database) stays on your computer in `~/.looksmax` (change it with `LOOKSMAX_HOME`).
 
+## Ascend on your phone (hosted version)
+
+`webapp/` is the same app as a static, installable web app (PWA):
+
+- **On-device:** MediaPipe runs in the phone's browser. Photos are analysed on the phone and never uploaded. Scans, quests and settings live in the browser's storage (IndexedDB).
+- **Install:** open the link, then on iPhone use Safari *Share → Add to Home Screen*, or on Android use Chrome *⋮ → Install app*. Installed, it opens full-screen, works offline, and the browser won't clear its data.
+- **Backup:** *Profile → Backup & data* exports one file with everything (photos included). Import it on a new phone.
+- **Same scoring:** the web reference model is fitted from the 5,500 reference faces measured by the web app's own code (`webapp/tools/measure_dataset.cjs` in headless Chromium). Phone and reference measurements are therefore identical, and JS scoring matches the Python package to within 0.1 percentile points.
+
+Build and deploy:
+
+```bash
+cd webapp && npm install && python3 build.py   # -> webapp/dist (static files)
+node tools/serve.cjs dist 8800                 # local test with production headers
+./deploy.sh                                    # Netlify (NETLIFY_AUTH_TOKEN=...)
+```
+
 ## What the data says (summary)
 
 From `docs/weight-validation.md` and the reference model:
