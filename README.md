@@ -64,12 +64,15 @@ All data (photos plus a SQLite database) stays on your computer in `~/.looksmax`
 - **Backup:** *Profile → Backup & data* exports one file with everything (photos included). Import it on a new phone.
 - **Same scoring:** the web reference model is fitted from the 5,500 reference faces measured by the web app's own code (`webapp/tools/measure_dataset.cjs` in headless Chromium). Phone and reference measurements are therefore identical, and JS scoring matches the Python package to within 0.1 percentile points.
 
-Build and deploy:
+**Live on GitHub Pages:** https://leirbagrazilian.github.io/Looksmaxxing-Max-potential/
+
+Build and publish:
 
 ```bash
 cd webapp && npm install && python3 build.py   # -> webapp/dist (static files)
 node tools/serve.cjs dist 8800                 # local test with production headers
-./deploy.sh                                    # Netlify (NETLIFY_AUTH_TOKEN=...)
+./publish_gh_pages.sh                          # GitHub Pages (gh-pages branch)
+./deploy.sh                                    # or Netlify (NETLIFY_AUTH_TOKEN=...)
 ```
 
 ## What the data says (summary)
