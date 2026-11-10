@@ -1,0 +1,9 @@
+{
+  "name": "ascend-webapp",
+  "private": true,
+  "description": "Ascend hosted phone app: on-device face scan, quests and progress",
+  "dependencies": {
+    "@mediapipe/tasks-vision": "1.1.1"
+  },
+  "type": "module"
+}

@@ -111,5 +111,5 @@ def coach_line(plan, done, has_scan, is_today):
     if is_today and not has_scan:
         return "Start with today's scan. It takes 10 seconds and tunes your quests."
     if len(left) == len(plan):
-        return f"New day. Start with: {left[0]['label'].lower()}."
-    return f"{len(plan) - len(left)} done, {len(left)} to go. Next: {left[0]['label'].lower()}."
+        return f"New day. Start with: {left[0]['label']}."
+    return f"{len(plan) - len(left)} done, {len(left)} to go. Next: {left[0]['label']}."

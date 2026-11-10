@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>measure harness</title>
+<script type="module">
+  // Loaded by tools/measure_dataset.js: measures reference images with the
+  // exact same code the app uses on the phone.
+  import { createMeasurer } from "./js/measure.js";
+  const m = await createMeasurer("./");
+  window.measureUrls = async (urls) => {
+    const out = [];
+    for (const u of urls) {
+      const img = new Image();
+      img.src = u;
+      await img.decode();
+      const r = await m.measure(img);
+      out.push(r ? { url: u, metrics: r.metrics, shape: r.shape } : { url: u, metrics: null });
+    }
+    return out;
+  };
+  window.ready = true;
+</script>

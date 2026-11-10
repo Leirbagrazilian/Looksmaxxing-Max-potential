@@ -4,6 +4,7 @@ Only derived statistics are stored (means, spreads, sorted metric values,
 average face shapes, regression coefficients), never the images.
 
 Build:  python -m looksmax.reference <images_dir> <All_labels.csv> [out.npz]
+Web:    python -m looksmax.reference --from-js js_metrics.json All_labels.csv web.npz web.json
 """
 
 import json
@@ -129,9 +130,40 @@ def build(img_dir, labels_csv, out_path=DEFAULT_PATH):
         if i % 1000 == 0:
             print(f"{i}/{len(labels)}", flush=True)
     fm.close()
-    df = pd.DataFrame(rows)
-    S = np.stack(shapes)
+    fit(pd.DataFrame(rows), np.stack(shapes), out_path)
 
+
+def build_from_js(js_json, labels_csv, out_path):
+    """Fit the reference from measurements made by the web app's own code
+    (webapp/tools/measure_dataset.js), so phone scans and reference match."""
+    ratings = dict(pd.read_csv(labels_csv, header=None, names=["file", "rating"]).values)
+    rows, shapes = [], []
+    for r in json.loads(Path(js_json).read_text()):
+        if not r["metrics"]:
+            continue
+        rows.append({**r["metrics"], "file": r["file"], "rating": ratings[r["file"]],
+                     "sex": r["file"][1], "eth": r["file"][0]})
+        shapes.append(np.array(r["shape"]))
+    fit(pd.DataFrame(rows), np.stack(shapes), out_path)
+
+
+def export_json(npz_path, json_path, n_quantiles=201):
+    """Compact JSON for the web app: sorted distributions become quantiles."""
+    d = np.load(npz_path)
+    meta = json.loads(str(d["meta"]))
+    q = np.linspace(0, 100, n_quantiles)
+    r6 = lambda a: np.round(np.asarray(a, dtype=float), 6).tolist()
+    out = {"meta": meta, "quantile_pcts": r6(q), "dist": {}}
+    for k in d.files:
+        if k.startswith("dist_"):
+            out["dist"][k[5:]] = r6(np.percentile(d[k], q))
+        elif k != "meta":
+            out[k] = r6(d[k]) if k != "pairs" else d[k].astype(int).tolist()
+    Path(json_path).write_text(json.dumps(out, separators=(",", ":")))
+    print(f"saved {json_path} ({Path(json_path).stat().st_size / 1e3:.0f} kB)")
+
+
+def fit(df, S, out_path=DEFAULT_PATH):
     # generalised Procrustes mean
     gpa = unit_shape(S[0])
     for _ in range(5):
@@ -209,4 +241,9 @@ def build(img_dir, labels_csv, out_path=DEFAULT_PATH):
 
 
 if __name__ == "__main__":
-    build(*sys.argv[1:4])
+    if sys.argv[1] == "--from-js":       # --from-js js_metrics.json labels.csv out.npz [out.json]
+        build_from_js(*sys.argv[2:5])
+        if len(sys.argv) > 5:
+            export_json(sys.argv[4], sys.argv[5])
+    else:
+        build(*sys.argv[1:4])

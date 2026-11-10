@@ -7,3 +7,6 @@ features.csv
 __pycache__/
 looksmax_report/
 .venv/
+webapp/node_modules/
+webapp/dist/
+webapp/.cache/
