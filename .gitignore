@@ -10,3 +10,4 @@ looksmax_report/
 webapp/node_modules/
 webapp/dist/
 webapp/.cache/
+!webapp/src/icons/*.png
